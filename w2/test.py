@@ -1,5 +1,5 @@
 import os
-from w2.main import get_sales_information
+from w2.main import get_sales_information, batch_files
 from w1.utils import DataReader
 import constants
 from global_utils import blockPrint, enablePrint
@@ -50,3 +50,17 @@ def test_revenue_per_region():
     assert all([len(each) > 0 for each in revenue_data])
 
     pprint(revenue_data)
+
+def test_batch_files():
+    blockPrint()
+    data_folder_path = os.path.join(CURRENT_FOLDER, '..', constants.DATA_FOLDER_NAME, 'tst')
+    files = [str(file) for file in os.listdir(data_folder_path) if str(file).endswith('csv')]
+
+    file_paths = [os.path.join(data_folder_path, file_name) for file_name in files]
+    batched_files = batch_files(file_paths, 2)
+    enablePrint()
+
+    assert len(batched_files) > 0
+    assert all([len(each) > 0 for each in batched_files])
+
+    pprint(batched_files)
