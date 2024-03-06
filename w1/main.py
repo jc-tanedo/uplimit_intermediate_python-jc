@@ -1,3 +1,4 @@
+import time
 import constants
 from w1.data_processor import DataProcessor
 from pprint import pprint
@@ -106,5 +107,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    st = time.time()
+    res = main()
+    en = time.time()
+    print("Overall time taken : {}".format(en-st))
 
