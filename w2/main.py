@@ -96,6 +96,13 @@ def run(file_names: List[str], n_process: int) -> List[Dict]:
 def flatten(lst: List[List]) -> List:
     return [item for sublist in lst for item in sublist]
 
+def save_and_plot_data(yearly_data_arr: List[Dict], output_save_folder: str) -> None:
+    for yearly_data in yearly_data_arr:
+        with open(os.path.join(output_save_folder, f'{yearly_data["file_name"]}.json'), 'w') as f:
+                f.write(json.dumps(yearly_data))
+
+                plot_sales_data(yearly_revenue=yearly_data['revenue_per_region'], year=yearly_data["file_name"],
+                                plot_save_path=os.path.join(output_save_folder, f'{yearly_data["file_name"]}.png'))
 
 def main() -> List[Dict]:
     """
@@ -144,7 +151,9 @@ def main() -> List[Dict]:
     """
 
     st = time.time()
-    n_processes = 3 # you may modify this number - check out multiprocessing.cpu_count() as well
+    cpu_count = multiprocessing.cpu_count()
+    n_processes = cpu_count if cpu_count > 0 else 1 # you may modify this number - check out multiprocessing.cpu_count() as well
+    print("Number of processes : {}".format(n_processes))
 
     parser = argparse.ArgumentParser(description="Choose from one of these : [tst|sml|bg]")
     parser.add_argument('--type',
@@ -165,22 +174,31 @@ def main() -> List[Dict]:
 
     ######################################## YOUR CODE HERE ##################################################
     with multiprocessing.Pool(processes=n_processes) as pool:
-        
+        results = pool.starmap(run, [(list(batch), ind) for ind, batch in enumerate(batches)])
+        pool.close()
+        pool.join()
+
+        revenue_data = flatten(results)
     ######################################## YOUR CODE HERE ##################################################
 
     en = time.time()
     print("Overall time taken : {}".format(en-st))
-
-    ######################################## YOUR CODE HERE ##################################################
-    for yearly_data in revenue_data:
         
-
+    ######################################## YOUR CODE HERE ##################################################
+    output_batches = batch_files(revenue_data, n_processes)
+    with multiprocessing.Pool(processes=n_processes) as pool:
+        results = pool.starmap(save_and_plot_data, [(batch, output_save_folder) for batch in output_batches])
+        pool.close()
+        pool.join()
     ######################################## YOUR CODE HERE ##################################################
         
     # should return revenue data
-    return #### [YOUR CODE HERE] ####
+    return revenue_data
 
 
 if __name__ == '__main__':
+    st = time.time()
     res = main()
+    en = time.time()
+    print("Overall time taken : {}".format(en-st))
     pprint(res)
